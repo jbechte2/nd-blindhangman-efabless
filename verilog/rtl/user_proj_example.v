@@ -308,12 +308,12 @@ module datapath #(parameter WIDTH = 8, REGBITS = 3)
   always_comb
     if (en_word_index) word_index = random6;
   
-  // TODO: this
-  // if wi = 0
-  wire [24:0] word = words[24:0];
-  // if wi = 1 [49:25]
-  // if wi = 2 [74:50]
-  // if wi = 3 [99:75]
+
+  wire [24:0] word;
+  wordrom wordromy(
+    .addr(word_index),
+    .data(word)
+  );
   
   lfsr6 lfsr(
     .clk(clk),
@@ -355,6 +355,18 @@ module lfsr6 (
 
  always @(posedge clk)
   q <= {q[4:0], q[5]^q[0]};
+
+endmodule
+
+module wordrom (
+  input [5:0] addr,
+  output [24:0] data
+)
+
+  reg [24:0] words [0:63];
+  initial $readmemb("words.txt", words);
+
+  assign data = words[addr];
 
 endmodule
 
