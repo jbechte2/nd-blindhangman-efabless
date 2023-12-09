@@ -14,9 +14,9 @@ module user_proj_example #(
     input wb_rst_i,
 
     // IOs
-    input  [15:0] io_in,
-    output [15:0] io_out,
-	output [15:0] io_oeb,
+    input  [5:0] io_in,
+    output [6:0] io_out,
+	  output [6:0] io_oeb,
 );
 
 	/* For mapping the wb_clk_i and wb_rst_i to our clk and rst */
@@ -48,15 +48,15 @@ typedef enum logic [3:0] {INIT_GAME = 4'b0000, GEN_WORD, GUESS,
                          } statetype;
 
 
-// next = chip_input[15];
+// next = chip_input[5];
 // input_char = chip_input[4:0];
 // guessed_letters = chip_output[4:0];
 // win = chip_output[14];
 // lose = chip_output[15];
 module hangy
              (input  logic             clk, reset, 
-              input  [15:0] chip_input,
-              output [15:0] chip_output);
+              input  [5:0] chip_input,
+              output [6:0] chip_output);
   
   logic [4:0] input_char_eq_word;
   logic guessed_letters_is_done;
@@ -69,14 +69,11 @@ module hangy
   logic s_lose, en_lose;
 
   // chip input breakdown:
-  logic next = chip_input[15];
+  logic next = chip_input[5];
   logic [4:0] input_char = chip_input[4:0];
 
   // chip output breakdown:
-  logic [4:0] guessed_letters = chip_output[4:0];
-  logic win = chip_output[14];
-  logic lose = chip_output[15];
-
+  assign chip_output[6:0] = {lose, win, guessed_letters};
 
   controller controlly (
     .clk(clk),
@@ -313,7 +310,10 @@ module datapath #(parameter WIDTH = 8, REGBITS = 3)
   
   // TODO: this
   // if wi = 0
-  wire [24:0] word = words[23:0];
+  wire [24:0] word = words[24:0];
+  // if wi = 1 [49:25]
+  // if wi = 2 [74:50]
+  // if wi = 3 [99:75]
   
   lfsr6 lfsr(
     .clk(clk),
@@ -342,6 +342,7 @@ module datapath #(parameter WIDTH = 8, REGBITS = 3)
   
   always_comb 
     if (en_win) win = s_win;
+
   always_comb 
     if (en_lose) lose = s_lose;  
 endmodule
