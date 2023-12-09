@@ -317,7 +317,7 @@ module datapath #(parameter WIDTH = 8, REGBITS = 3)
   
   lfsr6 lfsr(
     .clk(clk),
-    .q(word_index)
+    .q(random6)
   );
 
   reg [4:0] input_char = 0;
