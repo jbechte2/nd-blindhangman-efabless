@@ -1,57 +1,49 @@
 module controller_test; 
 
-  localparam integer HLT=0, SKZ=1, ADD=2, AND=3, XOR=4, LDA=5, STO=6, JMP=7;
 
-  reg [5:0] op            ; 
-  reg [5:0] funct         ;
-  reg       zero          ;
-  wire      memread       ;
-  wire      memwrite      ;
-  wire      alusrca       ;
-  wire      memtoreg      ;
-  wire      iord          ; 
-  wire      pcen          ;
-  wire      regwrite      ;
-  wire      regdst        ;
-  wire [1:0] pcsrc        ;
-  wire       alusrcb      ; 
-  wire [2:0] alucontrol   ; 
-  wire [3:0] irwrite      ;
-  
 
+  reg [4:0] input_char_eq_word;
+  wire      guessed_letters_is_done;
+  wire      s_tries;
+  wire      en_tries;
+  wire  [2:0]    s_guessed_letters;
+  wire  [2:0]    en_guessed_letters ; 
+  wire      en_word_index;
+  wire      en_input_char;
+  wire      s_win;
+  wire      en_win;
+  wire      s_lose;
+  wire      en_lose;
 
   controller controller_inst 
 
   (
 
-    .op (op), 
-    .funct (funct), 
-    .zero (zero), 
-    .memread (memread), 
-    .memwrite (memwrite), 
-    .alusrca (alusrca), 
-    .memtoreg (memtoreg), 
-    .iord (iord), 
-    .pcen (pcen), 
-    .regwrite (regwrite), 
-    .regdst (regdst), 
-    .pcsrc (pcsrc), 
-    .alusrcb (alusrcb), 
-    .alucontrol (alucontrol), 
-    .irwrite (irwrite), 
+    .input_char_eq_word (input_char_eq_word), 
+    .guessed_letters_is_done (guessed_letters_is_done),
+    .s_tries(s_tries),
+    .en_tries(en_tries),
+    .s_guessed_letters(s_guessed_letters),
+    .en_guessed_letters(en_guessed_letters), 
+    .en_word_index (en_word_index), 
+    .en_input_char (en_input_char), 
+    .s_win(s_win), 
+    .en_win(en_win), 
+    .s_lose(s_lose), 
+    .en_lose(en_lose), 
     
   ); 
 
   task expect; 
     input [4:0] exp_out; 
-    if ({memread, memwrite, alusrca, memtoreg, iord, pcen, regwrite, regdst, pcsrc, alusrcb, alucontrol, irwrite} !== exp_out) begin
+    if ({input_char_eq_word, guessed_letters_is_done, s_tries, en_tries, s_guessed_letters, en_guessed_letters, en_word_index, en_input_char, s_win, en_win, s_lose, en_lose} !== exp_out) begin
       $display("\nTEST FAILED");
-      $display("time\top funct zero memtoreg iord pcen regwrite regdst pcsrc alusrcb alucontrol irwrite");
+      $display("time\tinput_char_eq_word, guessed_letters_is_done, s_tries, en_tries, s_guessed_letters, en_guessed_letters, en_word_index, en_input_char, s_win, en_win, s_lose, en_lose");
       $display("====\t====== ===== ==== === == ===== ====== ==== ===== ====== ===== ==");
-      $display("%0d\t%d      %d     %b    %b   %b  %b     %b      %b    %b     %b      %b     %b",
-               $time, op, funct, memtoreg, iord, pcen, regwrite, regdst, pcsrc, alusrcb, alucontrol, irwrite, 
+      $display("%0d\t%d      %b     %b    %b   %d  %d     %b      %b    %b     %b",
+               $time, input_char_eq_word, guessed_letters_is_done, s_tries, en_tries, s_guessed_letters, en_guessed_letters, en_word_index, en_input_char, s_win, en_win, s_lose, en_lose 
               );
-      $display("WANT\t                  %b   %b  %b     %b      %b    %b     %b      %b     %b",
+      $display("WANT\t                  %b   %b  %b     %b      %b   ",
                exp_out[4],exp_out[3],exp_out[2],exp_out[1],exp_out[0]);
       $finish;
     end
