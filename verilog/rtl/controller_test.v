@@ -64,14 +64,14 @@ module controller_test;
     $write(" Generating Word..."); controller.word=25'b 01101 01110 10011 10001 00101 en_word_index=0; #1 expect (5'b00000); // notre
    
     $write("7 Tries Remaining"); s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
-    $write("6 Tries Remaining"); input_char_eq_word=5'b00000; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
-    $write("5 Tries Remaining"); input_char_eq_word=5'b00000; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
-    $write("4 Tries Remaining"); input_char_eq_word=5'b00000; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
-    $write("3 Tries Remaining"); input_char_eq_word=5'b00000; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
-    $write("2 Tries Remaining"); input_char_eq_word=5'b00000; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
-    $write("1 Tries Remaining"); input_char_eq_word=5'b00000; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
+    $write("6 Tries Remaining"); input_char_eq_word=5'b00000; en_input_char=1; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
+    $write("5 Tries Remaining"); input_char_eq_word=5'b00000; en_input_char=1; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
+    $write("4 Tries Remaining"); input_char_eq_word=5'b00000; en_input_char=1; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
+    $write("3 Tries Remaining"); input_char_eq_word=5'b00000; en_input_char=1; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
+    $write("2 Tries Remaining"); input_char_eq_word=5'b00000; en_input_char=1; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
+    $write("1 Tries Remaining"); input_char_eq_word=5'b00000; en_input_char=1; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
    
-    $write("You Lose :( "); s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
+    $write("You Lose :( "); s_lose=1; en_lose=1; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
     $write("\n");
 
 
@@ -82,16 +82,34 @@ module controller_test;
     $write(" HangMan Game Starting"); s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=1; #1 expect (5'b00000); // init game
     $write(" Generating Word..."); controller.word=25'b 01101 01110 10011 10001 00101 en_word_index=0; #1 expect (5'b00000); // notre
     
-    $write("7 Tries Remaining"); s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
-    $write("7 Tries Remaining"); input_char_eq_word=5'b01101; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
-    $write("7 Tries Remaining"); input_char_eq_word=5'b01110; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
-    $write("7 Tries Remaining"); input_char_eq_word=5'b10011; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
-    $write("7 Tries Remaining"); input_char_eq_word=5'b10001; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
-    $write("7 Tries Remaining"); input_char_eq_word=5'b00101; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
+    $write("7 Tries Remaining"); s_tries=0; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
+    $write("7 Tries Remaining"); input_char_eq_word=5'b01101; en_input_char=1; s_tries=0; en_tries=1; s_guessed_letters= 3'b001; en_guessed_letters=1; #1 expect (5'b00000);
+    $write("7 Tries Remaining"); input_char_eq_word=5'b01110; en_input_char=1; s_tries=0; en_tries=1; s_guessed_letters= 3'b010; en_guessed_letters=1; #1 expect (5'b00000);
+    $write("7 Tries Remaining"); input_char_eq_word=5'b10011; en_input_char=1; s_tries=0; en_tries=1; s_guessed_letters= 3'b011; en_guessed_letters=1; #1 expect (5'b00000);
+    $write("7 Tries Remaining"); input_char_eq_word=5'b10001; en_input_char=1; s_tries=0; en_tries=1; s_guessed_letters= 3'b100; en_guessed_letters=1; #1 expect (5'b00000);
+    $write("7 Tries Remaining"); input_char_eq_word=5'b00101; en_input_char=1; s_tries=0; en_tries=1; s_guessed_letters= 3'b101; en_guessed_letters=1; #1 expect (5'b00000);
    
-    $write("You Win :) "); s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=1; #1 expect (5'b00000);
+    $write("You Win :) "); s_win=1; en_win=1; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=1; #1 expect (5'b00000);
     $write("\n");
 
+   //more challenging win 
+    
+    $write("Testing Blind Hangman");
+    $write(" HangMan Game Starting"); s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=1; #1 expect (5'b00000); // init game
+    $write(" Generating Word..."); controller.word=25'b 01101 01110 10011 10001 00101 en_word_index=0; #1 expect (5'b00000); // notre
+   
+    $write("7 Tries Remaining"); s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
+    $write("6 Tries Remaining"); input_char_eq_word=5'b00000; en_input_char=1; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
+    $write("6 Tries Remaining"); input_char_eq_word=5'b00000; en_input_char=1; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
+    $write("5 Tries Remaining"); input_char_eq_word=5'b00000; en_input_char=1; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
+    $write("4 Tries Remaining"); input_char_eq_word=5'b00000; en_input_char=1; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
+    $write("3 Tries Remaining"); input_char_eq_word=5'b00000; en_input_char=1; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
+    $write("3 Tries Remaining"); input_char_eq_word=5'b00000; en_input_char=1; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
+   
+    $write("You Win :) "); s_lose=1; en_lose=1; s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=0; #1 expect (5'b00000);
+    $write("\n");
+    
+    
     $finish; 
 
   end
