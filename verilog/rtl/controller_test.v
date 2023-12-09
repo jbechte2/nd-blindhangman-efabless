@@ -48,12 +48,25 @@ module controller_test;
       $finish;
     end
   endtask
-  
-  
-  initial begin 
 
-    clk = 0; 
+  initial begin //setting up clock 
+    
+    clk=0;
+    forever #5 clk = ~clk; 
+
+  end 
   
+  initial begin //test bench 
+
+    
+    $write("Testing Blind Hangman");
+    $write(" HangMan Game Starting"); s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=1; #1 expect (5'b000000000); // init game
+    $write(" Generating Word..."); en_word_index=1; #1 expect (5'b00000000); // sel, rd
+    $write("7 Tries Remaining"); s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=1; #1 expect (5'b000000000);
+
+    
+    $write("\n");
+
     
 
 
