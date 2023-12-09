@@ -14,33 +14,24 @@ module user_proj_example #(
     input wb_rst_i,
 
     // IOs
-    input  [DWIDTH-1:0] io_in,
-    output [BITS-1:0] io_out,
-	output [BITS-1:0] io_oeb,
+    input  [15:0] io_in,
+    output [15:0] io_out,
+	output [15:0] io_oeb,
 );
 
 	/* For mapping the wb_clk_i and wb_rst_i to our clk and rst */
-    wire clk = wb_clk_i;
-    wire rst = !wb_rst_i;
+  wire clk = wb_clk_i;
+  wire rst = !wb_rst_i;
 	
 	/* Set io_oeb to 0 to ensure all outputs are active */
 	assign io_oeb = 1'b0;
 
-	/* Output signals */
-	wire [DWIDTH-1:0] adr_out;
-	wire [DWIDTH-1:0] writedata_out;
-	
-	mips the_mips(
+	hangy the_hangy(
 		.clk(clk),
 		.reset(rst),
-		.memdata(io_in[DWIDTH-1:0]),
-		.adr(adr_out),
-		.writedata(writedata_out)
+		.chip_input(io_in),
+		.chip_output(io_out)
 	);
-
-	/* Map the wires to the io_out */
-	assign io_out[BITS-1:DWIDTH] = adr_out;
-	assign io_out[DWIDTH-1:0] = writedata_out;
 
 endmodule
 
@@ -57,45 +48,92 @@ typedef enum logic [3:0] {INIT_GAME = 4'b0000, GEN_WORD, GUESS,
                          } statetype;
 
 
-// simplified MIPS processor
-module mips #(parameter WIDTH = 8, REGBITS = 3)
+// next = chip_input[15];
+// input_char = chip_input[4:0];
+// guessed_letters = chip_output[4:0];
+// win = chip_output[14];
+// lose = chip_output[15];
+module hangy
              (input  logic             clk, reset, 
-              input  logic [WIDTH-1:0] memdata, 
-              output logic [WIDTH-1:0] adr, writedata);
+              input  [15:0] chip_input,
+              output [15:0] chip_output);
+  
+  logic [4:0] input_char_eq_word;
+  logic guessed_letters_is_done;
+  logic s_tries, en_tries;
+  logic [2:0] s_guessed_letters, en_guessed_letters;
+  logic en_word_index;
+  logic en_input_char;
+  logic s_win, en_win;
+  logic s_lose, en_lose;
 
-   logic [31:0] instr;
-   logic        zero, alusrca, memtoreg, iord, pcen, regwrite, regdst, memread, memwrite;
-   logic [1:0]  pcsrc, alusrcb;
-   logic [3:0]  irwrite;
-   logic [2:0]  alucontrol;
-   logic [5:0]  op, funct;
- 
-   assign op = instr[31:26];      
-   assign funct = instr[5:0];  
-      
-   controller  cont(clk, reset, op, funct, zero, memread, memwrite, 
-                    alusrca, memtoreg, iord, pcen, regwrite, regdst,
-                    pcsrc, alusrcb, alucontrol, irwrite);
-   datapath    #(WIDTH, REGBITS) 
-               dp(clk, reset, memdata, alusrca, memtoreg, iord, pcen,
-                  regwrite, regdst, pcsrc, alusrcb, irwrite, alucontrol,
-                  zero, instr, adr, writedata);
+  // chip input breakdown:
+  logic next = chip_input[15];
+  logic [4:0] input_char = chip_input[4:0];
+
+  // chip output breakdown:
+  logic [4:0] guessed_letters = chip_output[4:0];
+  logic win = chip_output[14];
+  logic lose = chip_output[15];
+
+
+  controller controlly (
+    .clk(clk),
+    .reset(reset),
+    .next(next),
+    .input_char_eq_word(input_char_eq_word),
+    .guessed_letters_is_done(guessed_letters_is_done),
+    .s_tries(s_tries),
+    .en_tries(en_tries),
+    .s_guessed_letters(s_guessed_letters),
+    .en_guessed_letters(en_guessed_letters),
+    .en_word_index(en_word_index),
+    .en_input_char(en_input_char),
+    .s_win(s_win),
+    .en_win(en_win),
+    .s_lose(s_lose),
+    .en_lose(en_lose)
+  );
+
+  datapath daty (
+    .clk(clk),
+    .rst(reset),
+    .chip_input(chip_input),
+    .s_tries(s_tries),
+    .en_tries(en_tries),
+    .s_guessed_letters(s_guessed_letters),
+    .en_guessed_letters(en_guessed_letters),
+    .en_word_index(en_word_index),
+    .en_input_char(en_input_char),
+    .s_win(s_win),
+    .en_win(en_win),
+    .s_lose(s_lose),
+    .en_lose(en_lose),
+    .guessed_letters(guessed_letters),
+    .input_char_eq_word(input_char_eq_word),
+    .guessed_letters_is_done(guessed_letters_is_done),
+    .win(win),
+    .lose(lose)
+  );
+
 endmodule
 
 module controller(input logic clk, reset, 
-                  input  logic [5:0] op, funct,
-                  input  logic       zero, 
-                  output logic       memread, memwrite, alusrca,  
-                  output logic       memtoreg, iord, pcen, 
-                  output logic       regwrite, regdst, 
-                  output logic [1:0] pcsrc, alusrcb,
-                  output logic [2:0] alucontrol,
-                  output logic [3:0] irwrite);
+                  input  logic next, 
+                  input  logic [4:0] input_char_eq_word,
+                  input  logic guessed_letters_is_done,
+                  output logic s_tries, en_tries,
+                  output logic [2:0] s_guessed_letters, en_guessed_letters,
+                  output logic en_word_index,
+                  output logic en_input_char,
+                  output logic s_win, en_win,
+                  output logic s_lose, en_lose,
+                  );
 
   statetype       state, nextstate;
   
   always_ff @(posedge clk)
-    if (reset) state <= FETCH1;
+    if (reset) state <= INIT_GAME;
     else       state <= nextstate;
     
   always_comb
@@ -125,6 +163,12 @@ module controller(input logic clk, reset,
                           s_guessed_letters = 3'b0;
                           en_guessed_letters = 1'b1;
 
+                          s_win = 1'b0;
+                          en_win = 1'b1;
+
+                          s_lose = 1'b0;
+                          en_win = 1'b1;
+
                           if (next) nextstate = GEN_WORD;
                           else nextstate = INIT_GAME;
                         end
@@ -150,7 +194,7 @@ module controller(input logic clk, reset,
                           else next_state = CHECK_GUESS_3;
                         end
         CHECK_GUESS_3:  begin 
-			  if (input_char_eq_word_3) next_state = CORRECT_3;
+			                    if (input_char_eq_word_3) next_state = CORRECT_3;
                           else next_state = CHECK_GUESS_4;
                         end
         CHECK_GUESS_4:  begin 
@@ -209,62 +253,92 @@ module controller(input logic clk, reset,
       endcase
     end
   
-
-
-  
 endmodule
 
 
 module datapath #(parameter WIDTH = 8, REGBITS = 3)
-                 (input  logic             clk, reset, 
-                  input  logic [WIDTH-1:0] memdata, 
-                  input  logic             alusrca, memtoreg, iord, 
-                  input  logic             pcen, regwrite, regdst,
-                  input  logic [1:0]       pcsrc, alusrcb, 
-                  input  logic [3:0]       irwrite, 
-                  input  logic [2:0]       alucontrol, 
-                  output logic             zero, 
-                  output logic [31:0]      instr, 
-                  output logic [WIDTH-1:0] adr, writedata);
+                 (input  logic clk, rst,
+                 input   logic [15:0] chip_input,
 
-  logic [REGBITS-1:0] ra1, ra2, wa;
-  logic [WIDTH-1:0]   pc, nextpc, data, rd1, rd2, wd, a, srca, 
-                      srcb, aluresult, aluout, immx4;
+                  input logic s_tries, en_tries,
+                  input logic [2:0] s_guessed_letters, en_guessed_letters,
+                  input logic en_word_index,
+                  input logic en_input_char,
+                  input logic s_win, en_win,
+                  input logic s_lose, en_lose,
 
-  logic [WIDTH-1:0] CONST_ZERO = 0;
-  logic [WIDTH-1:0] CONST_ONE =  1;
+                 output reg [4:0] guessed_letters,    // this is letter-by-letter
 
-  // shift left immediate field by 2
-  assign immx4 = {instr[WIDTH-3:0],2'b00};
+                 output reg [4:0] input_char_eq_word, // this is letter-by-letter
+                 output reg guessed_letters_is_done,
 
-  // register file address fields
-  assign ra1 = instr[REGBITS+20:21];
-  assign ra2 = instr[REGBITS+15:16];
-  mux2       #(REGBITS) regmux(instr[REGBITS+15:16], 
-                               instr[REGBITS+10:11], regdst, wa);
+                 output reg win, 
+                 output reg lose,
+                 );
 
-   // independent of bit width, load instruction into four 8-bit registers over four cycles
-  flopen     #(8)      ir0(clk, irwrite[0], memdata[7:0], instr[7:0]);
-  flopen     #(8)      ir1(clk, irwrite[1], memdata[7:0], instr[15:8]);
-  flopen     #(8)      ir2(clk, irwrite[2], memdata[7:0], instr[23:16]);
-  flopen     #(8)      ir3(clk, irwrite[3], memdata[7:0], instr[31:24]);
+  reg [2:0] tries;
 
-  // datapath
-  flopenr    #(WIDTH)  pcreg(clk, reset, pcen, nextpc, pc);
-  flop       #(WIDTH)  datareg(clk, memdata, data);
-  flop       #(WIDTH)  areg(clk, rd1, a);
-  flop       #(WIDTH)  wrdreg(clk, rd2, writedata);
-  flop       #(WIDTH)  resreg(clk, aluresult, aluout);
-  mux2       #(WIDTH)  adrmux(pc, aluout, iord, adr);
-  mux2       #(WIDTH)  src1mux(pc, a, alusrca, srca);
-  mux4       #(WIDTH)  src2mux(writedata, CONST_ONE, instr[WIDTH-1:0], 
-                               immx4, alusrcb, srcb);
-  mux3       #(WIDTH)  pcmux(aluresult, aluout, immx4, 
-                             pcsrc, nextpc);
-  mux2       #(WIDTH)  wdmux(aluout, data, memtoreg, wd);
-  regfile    #(WIDTH,REGBITS) rf(clk, regwrite, ra1, ra2, 
-                                 wa, wd, rd1, rd2);
-  alu        #(WIDTH) alunit(srca, srcb, alucontrol, aluresult, zero);
+  always_comb 
+    begin
+      if (en_tries) begin
+        if (s_tries) tries = tries + 1'b1;
+        else tries = 1'b0;
+      end
+    end
+  
+  always_comb
+    begin
+      if (en_guessed_letters) begin
+        case (s_guessed_letters)
+          3'b000:  guessed_letters = 5'b00000;
+          3'b001:  guessed_letters = guessed_letters | 5'b10000;
+          3'b010:  guessed_letters = guessed_letters | 5'b01000;
+          3'b011:  guessed_letters = guessed_letters | 5'b00100;
+          3'b100:  guessed_letters = guessed_letters | 5'b00010;
+          3'b101:  guessed_letters = guessed_letters | 5'b00001;
+          default: guessed_letters = guessed_letters | 5'b00000;
+        endcase
+      end
+    end 
+
+  wire [5:0] random6;
+  reg [5:0] word_index = 0;
+  always_comb
+    if (en_word_index) word_index = random6;
+  
+  // TODO: this
+  // if wi = 0
+  wire [24:0] word = words[23:0];
+  
+  lfsr6 lfsr(
+    .clk(clk),
+    .q(word_index)
+  );
+
+  reg [4:0] input_char = 0;
+  always_comb
+    if (en_input_char) input_char = chip_input[4:0];
+  
+  always_comb 
+    input_char_eq_word = {
+      input_char == word[24:20],
+      input_char == word[19:15],
+      input_char == word[14:10],
+      input_char == word[9:5],
+      input_char == word[4:0],
+    }
+  
+
+  always_comb 
+    guessed_letters_is_done = (guessed_letters == 5'b11111);
+  
+  always_comb 
+    tries_eq_7 = (tries == 3'b111);
+  
+  always_comb 
+    if (en_win) win = s_win;
+  always_comb 
+    if (en_lose) lose = s_lose;  
 endmodule
 
 module lfsr6 (
