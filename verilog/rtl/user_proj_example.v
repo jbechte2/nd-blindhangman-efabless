@@ -60,6 +60,7 @@ module hangy
   
   logic [4:0] input_char_eq_word;
   logic guessed_letters_is_done;
+  logic tries_eq_7,
   logic s_tries, en_tries;
   logic [2:0] s_guessed_letters, en_guessed_letters;
   logic en_word_index;
@@ -83,6 +84,7 @@ module hangy
     .next(next),
     .input_char_eq_word(input_char_eq_word),
     .guessed_letters_is_done(guessed_letters_is_done),
+    .tries_eq_7(tries_eq_7),
     .s_tries(s_tries),
     .en_tries(en_tries),
     .s_guessed_letters(s_guessed_letters),
@@ -112,6 +114,7 @@ module hangy
     .guessed_letters(guessed_letters),
     .input_char_eq_word(input_char_eq_word),
     .guessed_letters_is_done(guessed_letters_is_done),
+    .tries_eq_7(tries_eq_7),
     .win(win),
     .lose(lose)
   );
@@ -122,6 +125,7 @@ module controller(input logic clk, reset,
                   input  logic next, 
                   input  logic [4:0] input_char_eq_word,
                   input  logic guessed_letters_is_done,
+                  input  logic tries_eq_7, 
                   output logic s_tries, en_tries,
                   output logic [2:0] s_guessed_letters, en_guessed_letters,
                   output logic en_word_index,
@@ -130,11 +134,11 @@ module controller(input logic clk, reset,
                   output logic s_lose, en_lose,
                   );
 
-  statetype       state, nextstate;
+  statetype       state, next_state;
   
   always_ff @(posedge clk)
     if (reset) state <= INIT_GAME;
-    else       state <= nextstate;
+    else       state <= next_state;
     
   always_comb
     begin
@@ -167,38 +171,38 @@ module controller(input logic clk, reset,
                           en_win = 1'b1;
 
                           s_lose = 1'b0;
-                          en_win = 1'b1;
+                          en_lose = 1'b1;
 
-                          if (next) nextstate = GEN_WORD;
-                          else nextstate = INIT_GAME;
+                          if (next) next_state = GEN_WORD;
+                          else next_state = INIT_GAME;
                         end
         GEN_WORD:       begin
                           en_word_index = 1'b1;
-                          nextstate = GUESS;
+                          next_state = GUESS;
                         end
         GUESS:          begin
                           en_input_char = 1'b1;
-                          if (next) nextstate = CHECK_GUESS_0;
-                          else nextstate = GUESS;
+                          if (next) next_state = CHECK_GUESS_0;
+                          else next_state = GUESS;
                         end
         CHECK_GUESS_0:  begin 
-                          if (input_char_eq_word_0) next_state = CORRECT_0;
+                          if (input_char_eq_word[0]) next_state = CORRECT_0;
                           else next_state = CHECK_GUESS_1;
                         end
         CHECK_GUESS_1:  begin 
-                          if (input_char_eq_word_1) next_state = CORRECT_1;
+                          if (input_char_eq_word[1]) next_state = CORRECT_1;
                           else next_state = CHECK_GUESS_2;
                         end
         CHECK_GUESS_2:  begin 
-                          if (input_char_eq_word_2) next_state = CORRECT_2;
+                          if (input_char_eq_word[2]) next_state = CORRECT_2;
                           else next_state = CHECK_GUESS_3;
                         end
         CHECK_GUESS_3:  begin 
-			                    if (input_char_eq_word_3) next_state = CORRECT_3;
+			                    if (input_char_eq_word[3]) next_state = CORRECT_3;
                           else next_state = CHECK_GUESS_4;
                         end
         CHECK_GUESS_4:  begin 
-                          if (input_char_eq_word_4) next_state = CORRECT_4;
+                          if (input_char_eq_word[4]) next_state = CORRECT_4;
                           else next_state = ALL_INCORRECT;
                         end
         CORRECT_0:      begin
@@ -249,7 +253,7 @@ module controller(input logic clk, reset,
                           if (next) next_state = INIT_GAME;
                           else next_state = LOSE;
                         end
-        default: nextstate = INIT_GAME; // should never happen
+        default: next_state = INIT_GAME; // should never happen
       endcase
     end
   
@@ -271,6 +275,7 @@ module datapath #(parameter WIDTH = 8, REGBITS = 3)
 
                  output reg [4:0] input_char_eq_word, // this is letter-by-letter
                  output reg guessed_letters_is_done,
+                 output reg tries_eq_7, 
 
                  output reg win, 
                  output reg lose,
