@@ -52,6 +52,8 @@ module controller_test;
   
   initial begin 
 
+    clk = 0; 
+  
     
 
 
