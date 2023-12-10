@@ -7,3 +7,6 @@
 *.vcd
 *.gtkw
 *.nl.v
+
+/verilog/rtl/irun.*
+/verilog/rtl/INCA_libs

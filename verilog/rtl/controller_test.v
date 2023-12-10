@@ -1,71 +1,90 @@
 module controller_test; 
+ reg [5:0] _input;
+ wire [6:0] _output;
+
+ reg clk;
+ reg rst;
+
+ hangy uut (
+    .clk(clk),
+		.reset(rst),
+		.chip_input(_input),
+		.chip_output(_output)
+ );
 
 
+  task expect_val(input logic [6:0] compare_val); 
+    $display("Expected value: %b", compare_val);
+    if (_output !== compare_val) begin
+      $display("Got value: %b", _output);
+      $display("Test Failed");
+      $finish;
+    end
+  endtask
 
-  reg [4:0] input_char_eq_word;
-  wire      guessed_letters_is_done;
-  wire      s_tries;
-  wire      en_tries;
-  wire  [2:0]    s_guessed_letters;
-  wire  [2:0]    en_guessed_letters ; 
-  wire      en_word_index;
-  wire      en_input_char;
-  wire      s_win;
-  wire      en_win;
-  wire      s_lose;
-  wire      en_lose;
-
-  controller controller_inst 
-
-  (
-
-    .input_char_eq_word (input_char_eq_word), 
-    .guessed_letters_is_done (guessed_letters_is_done),
-    .s_tries(s_tries),
-    .en_tries(en_tries),
-    .s_guessed_letters(s_guessed_letters),
-    .en_guessed_letters(en_guessed_letters), 
-    .en_word_index (en_word_index), 
-    .en_input_char (en_input_char), 
-    .s_win(s_win), 
-    .en_win(en_win), 
-    .s_lose(s_lose), 
-    .en_lose(en_lose), 
-    
-  ); 
-
-  task expect; 
-    input [4:0] exp_out; 
-    if ({input_char_eq_word, guessed_letters_is_done, s_tries, en_tries, s_guessed_letters, en_guessed_letters, en_word_index, en_input_char, s_win, en_win, s_lose, en_lose} !== exp_out) begin
-      $display("\nTEST FAILED");
-      $display("time\tinput_char_eq_word, guessed_letters_is_done, s_tries, en_tries, s_guessed_letters, en_guessed_letters, en_word_index, en_input_char, s_win, en_win, s_lose, en_lose");
-      $display("====\t====== ===== ==== === == ===== ====== ==== ===== ====== ===== ==");
-      $display("%0d\t%d      %b     %b    %b   %d  %d     %b      %b    %b     %b",
-               $time, input_char_eq_word, guessed_letters_is_done, s_tries, en_tries, s_guessed_letters, en_guessed_letters, en_word_index, en_input_char, s_win, en_win, s_lose, en_lose 
-              );
-      $display("WANT\t                  %b   %b  %b     %b      %b   ",
-               exp_out[4],exp_out[3],exp_out[2],exp_out[1],exp_out[0]);
+  task expect_state(input logic [3:0] compare_state); 
+    $display("Expected state: %b", compare_state);
+    $display("In state %b", uut.controlly.state);
+    if (uut.controlly.state !== compare_state) begin
+      $display("Test Failed");
       $finish;
     end
   endtask
 
   initial begin //setting up clock 
-    
     clk=0;
-    forever #5 clk = ~clk; 
-
+    rst=0;
+    forever #5 begin
+      clk = ~clk; 
+    end
   end 
+
   
-  initial begin //test bench 
-
-    
-    $write("Testing Blind Hangman");
-    $write(" HangMan Game Starting"); s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=1; #1 expect (5'b000000000); // init game
-    $write(" Generating Word..."); en_word_index=1; #1 expect (5'b00000000); // sel, rd
-    $write("7 Tries Remaining"); s_tries=1; en_tries=1; s_guessed_letters= 3'b0; en_guessed_letters=1; #1 expect (5'b000000000);
-
-    
+  initial begin //test bench for lose game 
+// b01101 01110 10011 10001 00101
+    $write("Testing Blind Hangman ");
+    $write(" HangMan Game Starting "); #10 expect_val(7'b0000000); expect_state(0); // init game
+    // $write(" Generating Word..."); uut.daty.word=27'b000110101110100111000100101;  #10 expect_val (7'b0000000); // notre
+    $write(" this should generate word "); _input=6'b111111; #10 expect_val (7'b0000000); expect_state(1); #10; expect_state(2);
     $write("\n");
+
+	$write("an n?"); _input=6'b101101;  #10; _input=0; expect_state(3); #10; expect_state(4); #10; expect_val(7'b0010000); expect_state(2); 
+    $write("\n");
+	$write("enter o"); _input=6'b101110;  #10; _input=0; expect_state(3); #10; expect_state(5); #10; expect_state(6); #10; expect_val(7'b0011000); expect_state(2);
+    $write("\n");
+	$write("enter t"); _input=6'b110011;  #10; _input=0; expect_state(3); #10; expect_state(5); #10; expect_state(7); #10; expect_state(8); #10; expect_val(7'b0011100); expect_state(2);
+    $write("\n");
+	$write("enter r"); _input=6'b110001;  #10; _input=0; expect_state(3); #10; expect_state(5); #10; expect_state(7); #10; expect_state(9); #10; expect_state(10); #10; expect_val(7'b0011110); expect_state(2);
+    $write("\n");
+    $write("enter e"); _input=6'b100101;  #10; _input=0; expect_state(3); #10; expect_state(5); #10; expect_state(7); #10; expect_state(9); #10; expect_state(11); #10; expect_state(12); #10; expect_state(14); expect_val(7'b0111111); 
+    $write("\n");
+    
+	$write("go back to init"); _input=6'b100000; #10; expect_state(0); expect_val(7'b0000000); #10;  _input=0; expect_state(1); #10; expect_state(2);
+	$write("\n");
+	$write("enter a #1"); _input=6'b100000; #10; _input=0; expect_state(3); expect_val(7'b0000000); #10; expect_state(5); expect_val(7'b0000000); #10; expect_state(7); expect_val(7'b0000000); #10; expect_state(9); expect_val(7'b0000000); #10; expect_state(11); expect_val(7'b0000000); #10; expect_state(13); expect_val(7'b0000000); #10; expect_state(2); 
+	$write("\n");
+	$write("enter a #2"); _input=6'b100000; #10; _input=0; expect_state(3); expect_val(7'b0000000); #10; expect_state(5); expect_val(7'b0000000); #10; expect_state(7); expect_val(7'b0000000); #10; expect_state(9); expect_val(7'b0000000); #10; expect_state(11); expect_val(7'b0000000); #10; expect_state(13); expect_val(7'b0000000); #10; expect_state(2); 
+	$write("\n");
+	$write("enter a #3"); _input=6'b100000; #10; _input=0; expect_state(3); expect_val(7'b0000000); #10; expect_state(5); expect_val(7'b0000000); #10; expect_state(7); expect_val(7'b0000000); #10; expect_state(9); expect_val(7'b0000000); #10; expect_state(11); expect_val(7'b0000000); #10; expect_state(13); expect_val(7'b0000000); #10; expect_state(2); 
+	$write("\n");
+	$write("enter a #4"); _input=6'b100000; #10; _input=0; expect_state(3); expect_val(7'b0000000); #10; expect_state(5); expect_val(7'b0000000); #10; expect_state(7); expect_val(7'b0000000); #10; expect_state(9); expect_val(7'b0000000); #10; expect_state(11); expect_val(7'b0000000); #10; expect_state(13); expect_val(7'b0000000); #10; expect_state(2); 
+	$write("\n");
+	$write("enter a #5"); _input=6'b100000; #10; _input=0; expect_state(3); expect_val(7'b0000000); #10; expect_state(5); expect_val(7'b0000000); #10; expect_state(7); expect_val(7'b0000000); #10; expect_state(9); expect_val(7'b0000000); #10; expect_state(11); expect_val(7'b0000000); #10; expect_state(13); expect_val(7'b0000000); #10; expect_state(2); 
+	$write("\n");
+	$write("enter a #6"); _input=6'b100000; #10; _input=0; expect_state(3); expect_val(7'b0000000); #10; expect_state(5); expect_val(7'b0000000); #10; expect_state(7); expect_val(7'b0000000); #10; expect_state(9); expect_val(7'b0000000); #10; expect_state(11); expect_val(7'b0000000); #10; expect_state(13); expect_val(7'b0000000); #10; expect_state(2); 
+	$write("\n");
+	$write("enter a #7"); _input=6'b100000; #10; _input=0; expect_state(3); expect_val(7'b0000000); #10; expect_state(5); expect_val(7'b0000000); #10; expect_state(7); expect_val(7'b0000000); #10; expect_state(9); expect_val(7'b0000000); #10; expect_state(11); expect_val(7'b0000000); #10; expect_state(13); #10; expect_state(15);  expect_val(7'b1000000);
+	$write("\ngame over\n");
+
+	$write("go back to init"); _input=6'b100000; #10; expect_state(0); expect_val(7'b0000000); #10;  _input=0; expect_state(1); #10; expect_state(2);
+
+    $display("it all worked, I guess");
+    
+    #10; $finish;
+
+  end
+
+endmodule
 
     
 
