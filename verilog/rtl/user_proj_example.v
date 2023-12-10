@@ -61,7 +61,8 @@ module hangy(input  logic             clk, reset,
   logic guessed_letters_is_done;
   logic tries_eq_7;
   logic s_tries, en_tries;
-  logic [2:0] s_guessed_letters, en_guessed_letters;
+  logic [2:0] s_guessed_letters;
+  logic en_guessed_letters;
   logic en_word_index;
   logic en_input_char;
   logic s_win, en_win;
@@ -127,13 +128,14 @@ module hangy(input  logic             clk, reset,
 
 endmodule
 
-module controller(input logic clk, reset, 
+module controller(input  logic clk, reset, 
                   input  logic next, 
                   input  logic [4:0] input_char_eq_word,
                   input  logic guessed_letters_is_done,
                   input  logic tries_eq_7, 
                   output logic s_tries, en_tries,
-                  output logic [2:0] s_guessed_letters, en_guessed_letters,
+                  output logic [2:0] s_guessed_letters, 
+                  output logic en_guessed_letters,
                   output logic en_word_index,
                   output logic en_input_char,
                   output logic s_win, en_win,
@@ -271,7 +273,8 @@ module datapath #(parameter WIDTH = 8, REGBITS = 3)
                  input   logic [11:0] chip_input,
 
                   input logic s_tries, en_tries,
-                  input logic [2:0] s_guessed_letters, en_guessed_letters,
+                  input logic [2:0] s_guessed_letters,
+                  input logic en_guessed_letters,
                   input logic en_word_index,
                   input logic en_input_char,
                   input logic s_win, en_win,
@@ -289,7 +292,7 @@ module datapath #(parameter WIDTH = 8, REGBITS = 3)
 
   reg [2:0] tries;
 
-  always_comb 
+  always_ff @(posedge clk) 
     begin
       if (en_tries) begin
         if (s_tries) tries = tries + 1'b1;
@@ -297,7 +300,7 @@ module datapath #(parameter WIDTH = 8, REGBITS = 3)
       end
     end
   
-  always_comb
+  always_ff @(posedge clk)
     begin
       if (en_guessed_letters) begin
         case (s_guessed_letters)
@@ -313,9 +316,9 @@ module datapath #(parameter WIDTH = 8, REGBITS = 3)
     end 
 
   reg [5:0] word_index;
-  always_comb
+
+  always_ff @(posedge clk)
     if (en_word_index) word_index = chip_input[11:6];
-  
 
   wire [24:0] word;
   wordrom wordromy(
@@ -327,7 +330,7 @@ module datapath #(parameter WIDTH = 8, REGBITS = 3)
   //assign word=25'b0110101110100111000100101;
   
   reg [4:0] input_char;
-  always_comb
+  always_ff @(posedge clk)
     if (en_input_char) begin 
       input_char = chip_input[4:0];
       // $display("input_char: %b", input_char);
@@ -349,10 +352,10 @@ module datapath #(parameter WIDTH = 8, REGBITS = 3)
   always_comb 
     tries_eq_7 = (tries == 3'b111);
   
-  always_comb 
+  always_ff @(posedge clk)
     if (en_win) win = s_win;
 
-  always_comb 
+  always_ff @(posedge clk)
     if (en_lose) lose = s_lose;  
 endmodule
 
