@@ -14,7 +14,7 @@ module user_proj_example #(
     input wb_rst_i,
 
     // IOs
-    input  [5:0] io_in,
+    input  [11:0] io_in,
     output [6:0] io_out,
 	  output [6:0] io_oeb
 );
@@ -54,7 +54,7 @@ typedef enum logic [3:0] {INIT_GAME = 4'b0000, GEN_WORD, GUESS,
 // win = chip_output[14];
 // lose = chip_output[15];
 module hangy(input  logic             clk, reset, 
-              input  [5:0] chip_input,
+              input  [11:0] chip_input,
               output [6:0] chip_output);
   
   logic [4:0] input_char_eq_word;
@@ -73,9 +73,6 @@ module hangy(input  logic             clk, reset,
   // chip input breakdown:
   logic next;
   assign next = chip_input[5];
-
-  logic [4:0] input_char;
-  assign input_char = chip_input[4:0];
 
   wire lose;
   wire win;
@@ -271,7 +268,7 @@ endmodule
 
 module datapath #(parameter WIDTH = 8, REGBITS = 3)
                  (input  logic clk, rst,
-                 input   logic [5:0] chip_input,
+                 input   logic [11:0] chip_input,
 
                   input logic s_tries, en_tries,
                   input logic [2:0] s_guessed_letters, en_guessed_letters,
@@ -315,26 +312,20 @@ module datapath #(parameter WIDTH = 8, REGBITS = 3)
       end
     end 
 
-  wire [5:0] random6;
   reg [5:0] word_index;
   always_comb
-    if (en_word_index) word_index = random6;
+    if (en_word_index) word_index = chip_input[11:6];
   
 
   wire [24:0] word;
-  // wordrom wordromy(
-  //   .addr(word_index),
-  //   .data(word)
-  // );
+  wordrom wordromy(
+     .addr(word_index),
+     .data(word)
+   );
 
 
   assign word=25'b0110101110100111000100101;
   
-  lfsr6 lfsr(
-    .clk(clk),
-    .q(random6)
-  );
-
   reg [4:0] input_char;
   always_comb
     if (en_input_char) begin 
@@ -365,16 +356,6 @@ module datapath #(parameter WIDTH = 8, REGBITS = 3)
     if (en_lose) lose = s_lose;  
 endmodule
 
-module lfsr6 (
- input clk,
- output reg [5:0] q);
-
- initial q = 6'd1;
-
- always @(posedge clk)
-  q <= {q[4:0], q[5]^q[0]};
-
-endmodule
 
 module wordrom (
   input [5:0] addr,
