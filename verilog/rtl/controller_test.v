@@ -48,18 +48,35 @@ module controller_test;
     $write(" this should generate word "); _input=6'b111111; #10 expect_val (5'b00000); expect_state(1); #10; expect_state(2);
     $write("\n");
 
-    $write("an n?"); _input=6'b101101;  #10; _input=0; expect_state(3); #10; expect_state(4); #10; expect_state(2);
+	$write("an n?"); _input=6'b101101;  #10; _input=0; expect_state(3); #10; expect_state(4); #10; expect_val(5'b10000); expect_state(2); 
     $write("\n");
-    $write("enter o"); _input=6'b101110;  #10; _input=0; expect_state(3); #10; expect_state(5); #10; expect_state(6); #10; expect_state(2);
+	$write("enter o"); _input=6'b101110;  #10; _input=0; expect_state(3); #10; expect_state(5); #10; expect_state(6); #10; expect_val(5'b11000); expect_state(2);
     $write("\n");
-    $write("enter t"); _input=6'b110011;  #10; _input=0; expect_state(3); #10; expect_state(5); #10; expect_state(7); #10; expect_state(8); #10; expect_state(2);
+	$write("enter t"); _input=6'b110011;  #10; _input=0; expect_state(3); #10; expect_state(5); #10; expect_state(7); #10; expect_state(8); #10; expect_val(5'b11100); expect_state(2);
     $write("\n");
-    $write("enter r"); _input=6'b110001;  #10; _input=0; expect_state(3); #10; expect_state(5); #10; expect_state(7); #10; expect_state(9); #10; expect_state(10); #10; expect_state(2);
+	$write("enter r"); _input=6'b110001;  #10; _input=0; expect_state(3); #10; expect_state(5); #10; expect_state(7); #10; expect_state(9); #10; expect_state(10); #10; expect_val(5'b11110); expect_state(2);
     $write("\n");
-    $write("enter e"); _input=6'b100101;  #10; _input=0; expect_state(3); #10; expect_state(5); #10; expect_state(7); #10; expect_state(9); #10; expect_state(11); #10; expect_state(12); #10; expect_state(14);
+    $write("enter e"); _input=6'b100101;  #10; _input=0; expect_state(3); #10; expect_state(5); #10; expect_state(7); #10; expect_state(9); #10; expect_state(11); #10; expect_state(12); #10; expect_state(14); expect_val(5'b11111); 
     $write("\n");
     
-    $write("go back to init"); _input=6'b100000;  #10; expect_state(0); #10;  _input=0; expect_state(1); #10; expect_state(2);
+	$write("go back to init"); _input=6'b100000; #10; expect_state(0); expect_val(5'b00000); #10;  _input=0; expect_state(1); #10; expect_state(2);
+	$write("\n");
+	$write("enter a #1"); _input=6b'1000000; #10; _input=0; expect_state(3); expect_val(5'b00000); #10; expect_state(5); expect_val(5'b00000); #10; expect_state(7); expect_val(5'b00000); #10; expect_state(9); expect_val(5'b00000); #10; expect_state(11); expect_val(5'b00000); #10; expect_state(13); expect_val(5'b00000); #10; expect_state(2); 
+	$write("\n");
+	$write("enter a #2"); _input=6b'1000000; #10; _input=0; expect_state(3); expect_val(5'b00000); #10; expect_state(5); expect_val(5'b00000); #10; expect_state(7); expect_val(5'b00000); #10; expect_state(9); expect_val(5'b00000); #10; expect_state(11); expect_val(5'b00000); #10; expect_state(13); expect_val(5'b00000); #10; expect_state(2); 
+	$write("\n");
+	$write("enter a #3"); _input=6b'1000000; #10; _input=0; expect_state(3); expect_val(5'b00000); #10; expect_state(5); expect_val(5'b00000); #10; expect_state(7); expect_val(5'b00000); #10; expect_state(9); expect_val(5'b00000); #10; expect_state(11); expect_val(5'b00000); #10; expect_state(13); expect_val(5'b00000); #10; expect_state(2); 
+	$write("\n");
+	$write("enter a #4"); _input=6b'1000000; #10; _input=0; expect_state(3); expect_val(5'b00000); #10; expect_state(5); expect_val(5'b00000); #10; expect_state(7); expect_val(5'b00000); #10; expect_state(9); expect_val(5'b00000); #10; expect_state(11); expect_val(5'b00000); #10; expect_state(13); expect_val(5'b00000); #10; expect_state(2); 
+	$write("\n");
+	$write("enter a #5"); _input=6b'1000000; #10; _input=0; expect_state(3); expect_val(5'b00000); #10; expect_state(5); expect_val(5'b00000); #10; expect_state(7); expect_val(5'b00000); #10; expect_state(9); expect_val(5'b00000); #10; expect_state(11); expect_val(5'b00000); #10; expect_state(13); expect_val(5'b00000); #10; expect_state(2); 
+	$write("\n");
+	$write("enter a #6"); _input=6b'1000000; #10; _input=0; expect_state(3); expect_val(5'b00000); #10; expect_state(5); expect_val(5'b00000); #10; expect_state(7); expect_val(5'b00000); #10; expect_state(9); expect_val(5'b00000); #10; expect_state(11); expect_val(5'b00000); #10; expect_state(13); expect_val(5'b00000); #10; expect_state(2); 
+	$write("\n");
+	$write("enter a #7"); _input=6b'1000000; #10; _input=0; expect_state(3); expect_val(5'b00000); #10; expect_state(5); expect_val(5'b00000); #10; expect_state(7); expect_val(5'b00000); #10; expect_state(9); expect_val(5'b00000); #10; expect_state(11); expect_val(5'b00000); #10; expect_state(13); expect_val(5'b00000); #10; expect_state(15); 
+	$write("\ngame over\n");
+
+	$write("go back to init"); _input=6'b100000; #10; expect_state(0); expect_val(5'b00000); #10;  _input=0; expect_state(1); #10; expect_state(2);
     
     #10; $finish;
 
