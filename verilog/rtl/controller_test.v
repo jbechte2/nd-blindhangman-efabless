@@ -56,7 +56,7 @@ module controller_test;
     $write("\n");
 	$write("enter r"); _input=6'b110001;  #10; _input=0; expect_state(3); #10; expect_state(5); #10; expect_state(7); #10; expect_state(9); #10; expect_state(10); #10; expect_val(5'b11110); expect_state(2);
     $write("\n");
-    $write("enter e"); _input=6'b100101;  #10; _input=0; expect_state(3); #10; expect_state(5); #10; expect_state(7); #10; expect_state(9); #10; expect_state(11); #10; expect_state(12); #10; expect_state(14); expect_val(5'b11111); 
+    $write("enter e"); _input=6'b100101;  #10; _input=0; expect_state(3); #10; expect_state(5); #10; expect_state(7); #10; expect_state(9); #10; expect_state(11); #10; expect_state(12); #10; expect_state(14); expect_val(7'b0111111); 
     $write("\n");
     
 	$write("go back to init"); _input=6'b100000; #10; expect_state(0); expect_val(5'b00000); #10;  _input=0; expect_state(1); #10; expect_state(2);
