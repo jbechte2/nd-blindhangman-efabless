@@ -77,6 +77,8 @@ module controller_test;
 	$write("\ngame over\n");
 
 	$write("go back to init"); _input=6'b100000; #10; expect_state(0); expect_val(7'b0000000); #10;  _input=0; expect_state(1); #10; expect_state(2);
+
+    $display("it all worked, I guess");
     
     #10; $finish;
 
