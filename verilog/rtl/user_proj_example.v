@@ -324,7 +324,7 @@ module datapath #(parameter WIDTH = 8, REGBITS = 3)
    );
 
 
-  assign word=25'b0110101110100111000100101;
+  //assign word=25'b0110101110100111000100101;
   
   reg [4:0] input_char;
   always_comb
