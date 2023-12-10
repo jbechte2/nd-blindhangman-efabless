@@ -14,463 +14,362 @@ module user_proj_example #(
     input wb_rst_i,
 
     // IOs
-    input  [DWIDTH-1:0] io_in,
-    output [BITS-1:0] io_out,
-	output [BITS-1:0] io_oeb,
+    input  [11:0] io_in,
+    output [6:0] io_out,
+	  output [6:0] io_oeb
 );
 
 	/* For mapping the wb_clk_i and wb_rst_i to our clk and rst */
-    wire clk = wb_clk_i;
-    wire rst = !wb_rst_i;
+  wire clk = wb_clk_i;
+  wire rst = !wb_rst_i;
 	
 	/* Set io_oeb to 0 to ensure all outputs are active */
 	assign io_oeb = 1'b0;
 
-	/* Output signals */
-	wire [DWIDTH-1:0] adr_out;
-	wire [DWIDTH-1:0] writedata_out;
-	
-	mips the_mips(
+	hangy the_hangy(
 		.clk(clk),
 		.reset(rst),
-		.memdata(io_in[DWIDTH-1:0]),
-		.adr(adr_out),
-		.writedata(writedata_out)
+		.chip_input(io_in),
+		.chip_output(io_out)
 	);
-
-	/* Map the wires to the io_out */
-	assign io_out[BITS-1:DWIDTH] = adr_out;
-	assign io_out[DWIDTH-1:0] = writedata_out;
 
 endmodule
 
 
 // states and instructions
 
-  typedef enum logic [3:0] {FETCH1 = 4'b0000, FETCH2, FETCH3, FETCH4,
-                            DECODE, MEMADR, LBRD, LBWR, SBWR,
-                            RTYPEEX, RTYPEWR, BEQEX, JEX} statetype;
-  typedef enum logic [5:0] {LB    = 6'b100000,
-                            SB    = 6'b101000,
-                            RTYPE = 6'b000000,
-                            BEQ   = 6'b000100,
-                            J     = 6'b000010} opcode;
-  typedef enum logic [5:0] {ADD = 6'b100000,
-                            SUB = 6'b100010,
-                            AND = 6'b100100,
-                            OR  = 6'b100101,
-                            SLT = 6'b101010} functcode;
+typedef enum logic [3:0] {INIT_GAME = 4'b0000, GEN_WORD, GUESS, 
+                          CHECK_GUESS_0, CORRECT_0, 
+                          CHECK_GUESS_1, CORRECT_1, 
+                          CHECK_GUESS_2, CORRECT_2, 
+                          CHECK_GUESS_3, CORRECT_3, 
+                          CHECK_GUESS_4, CORRECT_4, 
+                          ALL_INCORRECT, WIN, LOSE
+                         } statetype;
 
 
-// simplified MIPS processor
-module mips #(parameter WIDTH = 8, REGBITS = 3)
-             (input  logic             clk, reset, 
-              input  logic [WIDTH-1:0] memdata, 
-              output logic [WIDTH-1:0] adr, writedata);
+// next = chip_input[5];
+// input_char = chip_input[4:0];
+// guessed_letters = chip_output[4:0];
+// win = chip_output[14];
+// lose = chip_output[15];
+module hangy(input  logic             clk, reset, 
+              input  [11:0] chip_input,
+              output [6:0] chip_output);
+  
+  logic [4:0] input_char_eq_word;
+  logic guessed_letters_is_done;
+  logic tries_eq_7;
+  logic s_tries, en_tries;
+  logic [2:0] s_guessed_letters;
+  logic en_guessed_letters;
+  logic en_word_index;
+  logic en_input_char;
+  logic s_win, en_win;
+  logic s_lose, en_lose;
 
-   logic [31:0] instr;
-   logic        zero, alusrca, memtoreg, iord, pcen, regwrite, regdst, memread, memwrite;
-   logic [1:0]  pcsrc, alusrcb;
-   logic [3:0]  irwrite;
-   logic [2:0]  alucontrol;
-   logic [5:0]  op, funct;
- 
-   assign op = instr[31:26];      
-   assign funct = instr[5:0];  
-      
-   controller  cont(clk, reset, op, funct, zero, memread, memwrite, 
-                    alusrca, memtoreg, iord, pcen, regwrite, regdst,
-                    pcsrc, alusrcb, alucontrol, irwrite);
-   datapath    #(WIDTH, REGBITS) 
-               dp(clk, reset, memdata, alusrca, memtoreg, iord, pcen,
-                  regwrite, regdst, pcsrc, alusrcb, irwrite, alucontrol,
-                  zero, instr, adr, writedata);
+  // always @(*)
+  //   $display("chip_input: %b", chip_input);
+
+  // chip input breakdown:
+  logic next;
+  assign next = chip_input[5];
+
+  wire lose;
+  wire win;
+  wire [4:0] guessed_letters;
+
+  // always @(next)
+  //   $display("next: %b", next);
+
+  // chip output breakdown:
+  assign chip_output[6:0] = {lose, win, guessed_letters};
+
+  controller controlly (
+    .clk(clk),
+    .reset(reset),
+    .next(next),
+    .input_char_eq_word(input_char_eq_word),
+    .guessed_letters_is_done(guessed_letters_is_done),
+    .tries_eq_7(tries_eq_7),
+    .s_tries(s_tries),
+    .en_tries(en_tries),
+    .s_guessed_letters(s_guessed_letters),
+    .en_guessed_letters(en_guessed_letters),
+    .en_word_index(en_word_index),
+    .en_input_char(en_input_char),
+    .s_win(s_win),
+    .en_win(en_win),
+    .s_lose(s_lose),
+    .en_lose(en_lose)
+  );
+
+  datapath daty (
+    .clk(clk),
+    .rst(reset),
+    .chip_input(chip_input),
+    .s_tries(s_tries),
+    .en_tries(en_tries),
+    .s_guessed_letters(s_guessed_letters),
+    .en_guessed_letters(en_guessed_letters),
+    .en_word_index(en_word_index),
+    .en_input_char(en_input_char),
+    .s_win(s_win),
+    .en_win(en_win),
+    .s_lose(s_lose),
+    .en_lose(en_lose),
+    .guessed_letters(guessed_letters),
+    .input_char_eq_word(input_char_eq_word),
+    .guessed_letters_is_done(guessed_letters_is_done),
+    .tries_eq_7(tries_eq_7),
+    .win(win),
+    .lose(lose)
+  );
+
 endmodule
 
-module controller(input logic clk, reset, 
-                  input  logic [5:0] op, funct,
-                  input  logic       zero, 
-                  output logic       memread, memwrite, alusrca,  
-                  output logic       memtoreg, iord, pcen, 
-                  output logic       regwrite, regdst, 
-                  output logic [1:0] pcsrc, alusrcb,
-                  output logic [2:0] alucontrol,
-                  output logic [3:0] irwrite);
+module controller(input  logic clk, reset, 
+                  input  logic next, 
+                  input  logic [4:0] input_char_eq_word,
+                  input  logic guessed_letters_is_done,
+                  input  logic tries_eq_7, 
+                  output logic s_tries, en_tries,
+                  output logic [2:0] s_guessed_letters, 
+                  output logic en_guessed_letters,
+                  output logic en_word_index,
+                  output logic en_input_char,
+                  output logic s_win, en_win,
+                  output logic s_lose, en_lose
+                  );
 
-  statetype       state;
-  logic           pcwrite, branch;
-  logic     [1:0] aluop;
-
-  // control FSM
-  statelogic statelog(clk, reset, op, state);
-  outputlogic outputlog(state, memread, memwrite, alusrca,
-                        memtoreg, iord, 
-                        regwrite, regdst, pcsrc, alusrcb, irwrite, 
-                        pcwrite, branch, aluop);
-
-  // other control decoding
-  aludec  ac(aluop, funct, alucontrol);
-  assign pcen = pcwrite | (branch & zero); // program counter enable
-endmodule
-
-module statelogic(input  logic       clk, reset,
-                  input  logic [5:0] op,
-                  output statetype   state);
-
-  statetype nextstate;
+  statetype       state, next_state;
   
   always_ff @(posedge clk)
-    if (reset) state <= FETCH1;
-    else       state <= nextstate;
+    if (reset) state <= INIT_GAME;
+    else       state <= next_state;
     
   always_comb
     begin
+      // start by setting all outputs to 0
+      s_tries = 1'b0; 
+      en_tries = 1'b0;
+
+      s_guessed_letters = 3'b0;
+      en_guessed_letters = 1'b0;
+
+      en_word_index = 1'b0;
+
+      en_input_char = 1'b0;
+
+      s_win = 1'b0;
+      en_win = 1'b0;
+
+      s_lose = 1'b0;
+      en_lose = 1'b0;
+
       case (state)
-        FETCH1:  nextstate = FETCH2;
-        FETCH2:  nextstate = FETCH3;
-        FETCH3:  nextstate = FETCH4;
-        FETCH4:  nextstate = DECODE;
-        DECODE:  case(op)
-                   LB:      nextstate = MEMADR;
-                   SB:      nextstate = MEMADR;
-                   RTYPE:   nextstate = RTYPEEX;
-                   BEQ:     nextstate = BEQEX;
-                   J:       nextstate = JEX;
-                   default: nextstate = FETCH1; // should never happen
-                 endcase
-        MEMADR:  case(op)
-                   LB:      nextstate = LBRD;
-                   SB:      nextstate = SBWR;
-                   default: nextstate = FETCH1; // should never happen
-                 endcase
-        LBRD:    nextstate = LBWR;
-        LBWR:    nextstate = FETCH1;
-        SBWR:    nextstate = FETCH1;
-        RTYPEEX: nextstate = RTYPEWR;
-        RTYPEWR: nextstate = FETCH1;
-        BEQEX:   nextstate = FETCH1;
-        JEX:     nextstate = FETCH1;
-        default: nextstate = FETCH1; // should never happen
+        INIT_GAME:      begin
+                          s_tries = 1'b0;
+                          en_tries = 1'b1;
+
+                          s_guessed_letters = 3'b0;
+                          en_guessed_letters = 1'b1;
+
+                          s_win = 1'b0;
+                          en_win = 1'b1;
+
+                          s_lose = 1'b0;
+                          en_lose = 1'b1;
+
+                          if (next) next_state = GEN_WORD;
+                          else next_state = INIT_GAME;
+                        end
+        GEN_WORD:       begin
+                          en_word_index = 1'b1;
+                          next_state = GUESS;
+                        end
+        GUESS:          begin
+                          en_input_char = 1'b1;
+                          if (next) next_state = CHECK_GUESS_0;
+                          else next_state = GUESS;
+                        end
+        CHECK_GUESS_0:  begin 
+                          if (input_char_eq_word[4]) next_state = CORRECT_0;
+                          else next_state = CHECK_GUESS_1;
+                        end
+        CHECK_GUESS_1:  begin 
+                          if (input_char_eq_word[3]) next_state = CORRECT_1;
+                          else next_state = CHECK_GUESS_2;
+                        end
+        CHECK_GUESS_2:  begin 
+                          if (input_char_eq_word[2]) next_state = CORRECT_2;
+                          else next_state = CHECK_GUESS_3;
+                        end
+        CHECK_GUESS_3:  begin 
+                          if (input_char_eq_word[1]) next_state = CORRECT_3;
+                          else next_state = CHECK_GUESS_4;
+                        end
+        CHECK_GUESS_4:  begin 
+                          if (input_char_eq_word[0]) next_state = CORRECT_4;
+                          else next_state = ALL_INCORRECT;
+                        end
+        CORRECT_0:      begin
+                          s_guessed_letters = 3'b001;
+                          en_guessed_letters = 1'b1;
+                          if (guessed_letters_is_done) next_state = WIN;
+                          else next_state = GUESS;
+                        end
+        CORRECT_1:      begin
+                          s_guessed_letters = 3'b010;
+                          en_guessed_letters = 1'b1;
+                          if (guessed_letters_is_done) next_state = WIN;
+                          else next_state = GUESS;
+                        end
+        CORRECT_2:      begin
+                          s_guessed_letters = 3'b011;
+                          en_guessed_letters = 1'b1;
+                          if (guessed_letters_is_done) next_state = WIN;
+                          else next_state = GUESS;
+                        end
+        CORRECT_3:      begin
+                          s_guessed_letters = 3'b100;
+                          en_guessed_letters = 1'b1;
+                          if (guessed_letters_is_done) next_state = WIN;
+                          else next_state = GUESS;
+                        end
+        CORRECT_4:      begin
+                          s_guessed_letters = 3'b101;
+                          en_guessed_letters = 1'b1;
+                          if (guessed_letters_is_done) next_state = WIN;
+                          else next_state = GUESS;
+                        end
+        ALL_INCORRECT:  begin
+                          s_tries = 1'b1;
+                          en_tries = 1'b1;
+                          if (tries_eq_7) next_state = LOSE;
+                          else next_state = GUESS;
+                        end
+        WIN:            begin
+                          s_win = 1'b1;
+                          en_win = 1'b1;
+                          if (next) next_state = INIT_GAME;
+                          else next_state = WIN;
+                        end
+        LOSE:           begin
+                          s_lose = 1'b1;
+                          en_lose = 1'b1;
+                          if (next) next_state = INIT_GAME;
+                          else next_state = LOSE;
+                        end
+        default: next_state = INIT_GAME; // should never happen
       endcase
     end
+  
 endmodule
 
-module outputlogic(input statetype state,
-                   output logic       memread, memwrite, alusrca,  
-                   output logic       memtoreg, iord, 
-                   output logic       regwrite, regdst, 
-                   output logic [1:0] pcsrc, alusrcb,
-                   output logic [3:0] irwrite,
-                   output logic       pcwrite, branch,
-                   output logic [1:0] aluop);
-
-  always_comb
-    begin
-      // set all outputs to zero, then 
-      // conditionally assert just the appropriate ones
-      irwrite = 4'b0000;
-      pcwrite = 0; branch = 0;
-      regwrite = 0; regdst = 0;
-      memread = 0; memwrite = 0;
-      alusrca = 0; alusrcb = 2'b00; aluop = 2'b00;
-      pcsrc = 2'b00;
-      iord = 0; memtoreg = 0;
-      case (state)
-        FETCH1: 
-          begin
-            memread = 1; 
-            irwrite = 4'b0001; 
-            alusrcb = 2'b01; 
-            pcwrite = 1;
-          end
-        FETCH2: 
-          begin
-            memread = 1;
-            irwrite = 4'b0010;
-            alusrcb = 2'b01;
-            pcwrite = 1;
-          end
-        FETCH3:
-          begin
-            memread = 1;
-            irwrite = 4'b0100;
-            alusrcb = 2'b01;
-            pcwrite = 1;
-          end
-        FETCH4:
-          begin
-            memread = 1;
-            irwrite = 4'b1000;
-            alusrcb = 2'b01;
-            pcwrite = 1;
-          end
-        DECODE: alusrcb = 2'b11;
-        MEMADR:
-          begin
-            alusrca = 1;
-            alusrcb = 2'b10;
-          end
-        LBRD:
-          begin
-            memread = 1;
-            iord    = 1;
-          end
-        LBWR:
-          begin
-            regwrite = 1;
-            memtoreg = 1;
-          end
-        SBWR:
-          begin
-            memwrite = 1;
-            iord     = 1;
-          end
-        RTYPEEX: 
-          begin
-            alusrca = 1;
-            aluop   = 2'b10;
-          end
-        RTYPEWR:
-          begin
-            regdst   = 1;
-            regwrite = 1;
-          end
-        BEQEX:
-          begin
-            alusrca = 1;
-            aluop   = 2'b01;
-            branch  = 1;
-            pcsrc   = 2'b01;
-          end
-        JEX:
-          begin
-            pcwrite  = 1;
-            pcsrc    = 2'b10;
-          end
-      endcase
-    end
-endmodule
-
-module aludec(input  logic [1:0] aluop, 
-              input  logic [5:0] funct, 
-              output logic [2:0] alucontrol);
-
-  always_comb
-    case (aluop)
-      2'b00: alucontrol = 3'b010;  // add for lb/sb/addi
-      2'b01: alucontrol = 3'b110;  // subtract (for beq)
-      default: case(funct)      // R-Type instructions
-                 ADD: alucontrol = 3'b010;
-                 SUB: alucontrol = 3'b110;
-                 AND: alucontrol = 3'b000;
-                 OR:  alucontrol = 3'b001;
-                 SLT: alucontrol = 3'b111;
-                 default:   alucontrol = 3'b101; // should never happen
-               endcase
-    endcase
-endmodule
 
 module datapath #(parameter WIDTH = 8, REGBITS = 3)
-                 (input  logic             clk, reset, 
-                  input  logic [WIDTH-1:0] memdata, 
-                  input  logic             alusrca, memtoreg, iord, 
-                  input  logic             pcen, regwrite, regdst,
-                  input  logic [1:0]       pcsrc, alusrcb, 
-                  input  logic [3:0]       irwrite, 
-                  input  logic [2:0]       alucontrol, 
-                  output logic             zero, 
-                  output logic [31:0]      instr, 
-                  output logic [WIDTH-1:0] adr, writedata);
+                 (input  logic clk, rst,
+                 input   logic [11:0] chip_input,
 
-  logic [REGBITS-1:0] ra1, ra2, wa;
-  logic [WIDTH-1:0]   pc, nextpc, data, rd1, rd2, wd, a, srca, 
-                      srcb, aluresult, aluout, immx4;
+                  input logic s_tries, en_tries,
+                  input logic [2:0] s_guessed_letters,
+                  input logic en_guessed_letters,
+                  input logic en_word_index,
+                  input logic en_input_char,
+                  input logic s_win, en_win,
+                  input logic s_lose, en_lose,
 
-  logic [WIDTH-1:0] CONST_ZERO = 0;
-  logic [WIDTH-1:0] CONST_ONE =  1;
+                 output reg [4:0] guessed_letters,    // this is letter-by-letter
 
-  // shift left immediate field by 2
-  assign immx4 = {instr[WIDTH-3:0],2'b00};
+                 output reg [4:0] input_char_eq_word, // this is letter-by-letter
+                 output reg guessed_letters_is_done,
+                 output reg tries_eq_7, 
 
-  // register file address fields
-  assign ra1 = instr[REGBITS+20:21];
-  assign ra2 = instr[REGBITS+15:16];
-  mux2       #(REGBITS) regmux(instr[REGBITS+15:16], 
-                               instr[REGBITS+10:11], regdst, wa);
+                 output reg win, 
+                 output reg lose
+                 );
 
-   // independent of bit width, load instruction into four 8-bit registers over four cycles
-  flopen     #(8)      ir0(clk, irwrite[0], memdata[7:0], instr[7:0]);
-  flopen     #(8)      ir1(clk, irwrite[1], memdata[7:0], instr[15:8]);
-  flopen     #(8)      ir2(clk, irwrite[2], memdata[7:0], instr[23:16]);
-  flopen     #(8)      ir3(clk, irwrite[3], memdata[7:0], instr[31:24]);
+  reg [2:0] tries;
 
-  // datapath
-  flopenr    #(WIDTH)  pcreg(clk, reset, pcen, nextpc, pc);
-  flop       #(WIDTH)  datareg(clk, memdata, data);
-  flop       #(WIDTH)  areg(clk, rd1, a);
-  flop       #(WIDTH)  wrdreg(clk, rd2, writedata);
-  flop       #(WIDTH)  resreg(clk, aluresult, aluout);
-  mux2       #(WIDTH)  adrmux(pc, aluout, iord, adr);
-  mux2       #(WIDTH)  src1mux(pc, a, alusrca, srca);
-  mux4       #(WIDTH)  src2mux(writedata, CONST_ONE, instr[WIDTH-1:0], 
-                               immx4, alusrcb, srcb);
-  mux3       #(WIDTH)  pcmux(aluresult, aluout, immx4, 
-                             pcsrc, nextpc);
-  mux2       #(WIDTH)  wdmux(aluout, data, memtoreg, wd);
-  regfile    #(WIDTH,REGBITS) rf(clk, regwrite, ra1, ra2, 
-                                 wa, wd, rd1, rd2);
-  alu        #(WIDTH) alunit(srca, srcb, alucontrol, aluresult, zero);
-endmodule
+  always_ff @(posedge clk) 
+    begin
+      if (en_tries) begin
+        if (s_tries) tries = tries + 1'b1;
+        else tries = 1'b0;
+      end
+    end
+  
+  always_ff @(posedge clk)
+    begin
+      if (en_guessed_letters) begin
+        case (s_guessed_letters)
+          3'b000:  guessed_letters = 5'b00000;
+          3'b001:  guessed_letters = guessed_letters | 5'b10000;
+          3'b010:  guessed_letters = guessed_letters | 5'b01000;
+          3'b011:  guessed_letters = guessed_letters | 5'b00100;
+          3'b100:  guessed_letters = guessed_letters | 5'b00010;
+          3'b101:  guessed_letters = guessed_letters | 5'b00001;
+          default: guessed_letters = guessed_letters | 5'b00000;
+        endcase
+      end
+    end 
 
-module alu #(parameter WIDTH = 8)
-            (input  logic [WIDTH-1:0] a, b, 
-             input  logic [2:0]       alucontrol, 
-             output logic [WIDTH-1:0] result,
-             output logic             zero);
-
-  logic [WIDTH-1:0] b2, andresult, orresult, sumresult, sltresult;
-
-  andN    andblock(a, b, andresult);
-  orN     orblock(a, b, orresult);
-  condinv binv(b, alucontrol[2], b2);
-  adder   addblock(a, b2, alucontrol[2], sumresult);
-  // slt should be 1 if most significant bit of sum is 1
-  assign sltresult = sumresult[WIDTH-1];
-
-  mux4 resultmux(andresult, orresult, sumresult, sltresult, alucontrol[1:0], result);
-  zerodetect #(WIDTH) zd(result, zero);
-endmodule
-
-
-module regfile #(parameter WIDTH = 8, REGBITS = 3)
-                (input  logic               clk, 
-                 input  logic               regwrite, 
-                 input  logic [REGBITS-1:0] ra1, ra2, wa, 
-                 input  logic [WIDTH-1:0]   wd, 
-                 output logic [WIDTH-1:0]   rd1, rd2);
-
-   logic [WIDTH-1:0] RAM [2**REGBITS-1:0];
-
-  // three ported register file
-  // read two ports combinationally
-  // write third port on rising edge of clock
-  // register 0 hardwired to 0
-  always @(posedge clk)
-    if (regwrite) RAM[wa] <= wd;
-
-  assign rd1 = ra1 ? RAM[ra1] : 0;
-  assign rd2 = ra2 ? RAM[ra2] : 0;
-endmodule
-
-
-module zerodetect #(parameter WIDTH = 8)
-                   (input  logic [WIDTH-1:0] a, 
-                    output logic             y);
-
-   assign y = (a==0);
-endmodule	
-
-module flop #(parameter WIDTH = 8)
-             (input  logic             clk, 
-              input  logic [WIDTH-1:0] d, 
-              output logic [WIDTH-1:0] q);
+  reg [5:0] word_index;
 
   always_ff @(posedge clk)
-    q <= d;
-endmodule
+    if (en_word_index) word_index = chip_input[11:6];
 
-module flopen #(parameter WIDTH = 8)
-               (input  logic             clk, en,
-                input  logic [WIDTH-1:0] d, 
-                output logic [WIDTH-1:0] q);
+  wire [24:0] word;
+  wordrom wordromy(
+     .addr(word_index),
+     .data(word)
+   );
 
+
+  //assign word=25'b0110101110100111000100101;
+  
+  reg [4:0] input_char;
   always_ff @(posedge clk)
-    if (en) q <= d;
-endmodule
-
-module flopenr #(parameter WIDTH = 8)
-                (input  logic             clk, reset, en,
-                 input  logic [WIDTH-1:0] d, 
-                 output logic [WIDTH-1:0] q);
- 
-  always_ff @(posedge clk)
-    if      (reset) q <= 0;
-    else if (en)    q <= d;
-endmodule
-
-module mux2 #(parameter WIDTH = 8)
-             (input  logic [WIDTH-1:0] d0, d1, 
-              input  logic             s, 
-              output logic [WIDTH-1:0] y);
-
-  assign y = s ? d1 : d0; 
-endmodule
-
-module mux3 #(parameter WIDTH = 8)
-             (input  logic [WIDTH-1:0] d0, d1, d2,
-              input  logic [1:0]       s, 
-              output logic [WIDTH-1:0] y);
+    if (en_input_char) begin 
+      input_char = chip_input[4:0];
+      // $display("input_char: %b", input_char);
+    end
+  
+  always_comb 
+    input_char_eq_word = {
+      input_char == word[24:20],
+      input_char == word[19:15],
+      input_char == word[14:10],
+      input_char == word[9:5],
+      input_char == word[4:0]
+    };
+  
 
   always_comb 
-    casez (s)
-      2'b00: y = d0;
-      2'b01: y = d1;
-      2'b1?: y = d2;
-    endcase
+    guessed_letters_is_done = (guessed_letters == 5'b11111);
+  
+  always_comb 
+    tries_eq_7 = (tries == 3'b111);
+  
+  always_ff @(posedge clk)
+    if (en_win) win = s_win;
+
+  always_ff @(posedge clk)
+    if (en_lose) lose = s_lose;  
 endmodule
 
-module mux4 #(parameter WIDTH = 8)
-             (input  logic [WIDTH-1:0] d0, d1, d2, d3,
-              input  logic [1:0]       s, 
-              output logic [WIDTH-1:0] y);
 
-  always_comb
-    case (s)
-      2'b00: y = d0;
-      2'b01: y = d1;
-      2'b10: y = d2;
-      2'b11: y = d3;
-    endcase
-endmodule
+module wordrom (
+  input [5:0] addr,
+  output [24:0] data
+);
 
-module andN #(parameter WIDTH = 8)
-             (input  logic [WIDTH-1:0] a, b,
-              output logic [WIDTH-1:0] y);
+  reg [24:0] words [0:63];
+  initial $readmemb("words_data.txt", words);
 
-  assign y = a & b;
-endmodule
+  assign data = words[addr];
 
-module orN #(parameter WIDTH = 8)
-            (input  logic [WIDTH-1:0] a, b,
-             output logic [WIDTH-1:0] y);
-
-  assign y = a | b;
-endmodule
-
-module inv #(parameter WIDTH = 8)
-            (input  logic [WIDTH-1:0] a,
-             output logic [WIDTH-1:0] y);
-
-  assign y = ~a;
-endmodule
-
-module condinv #(parameter WIDTH = 8)
-                (input  logic [WIDTH-1:0] a,
-                 input  logic             invert,
-                 output logic [WIDTH-1:0] y);
-
-  logic [WIDTH-1:0] ab;
-
-  inv  inverter(a, ab);
-  mux2 invmux(a, ab, invert, y);
-endmodule
-
-module adder #(parameter WIDTH = 8)
-              (input  logic [WIDTH-1:0] a, b,
-               input  logic             cin,
-               output logic [WIDTH-1:0] y);
-
-  assign y = a + b + cin;
 endmodule
 
 /* End EFabless Harness project with `default_nettype wire */
