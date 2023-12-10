@@ -16,7 +16,7 @@ module user_proj_example #(
     // IOs
     input  [5:0] io_in,
     output [6:0] io_out,
-	  output [6:0] io_oeb,
+	  output [6:0] io_oeb
 );
 
 	/* For mapping the wb_clk_i and wb_rst_i to our clk and rst */
@@ -53,14 +53,13 @@ typedef enum logic [3:0] {INIT_GAME = 4'b0000, GEN_WORD, GUESS,
 // guessed_letters = chip_output[4:0];
 // win = chip_output[14];
 // lose = chip_output[15];
-module hangy
-             (input  logic             clk, reset, 
+module hangy(input  logic             clk, reset, 
               input  [5:0] chip_input,
               output [6:0] chip_output);
   
   logic [4:0] input_char_eq_word;
   logic guessed_letters_is_done;
-  logic tries_eq_7,
+  logic tries_eq_7;
   logic s_tries, en_tries;
   logic [2:0] s_guessed_letters, en_guessed_letters;
   logic en_word_index;
@@ -68,9 +67,22 @@ module hangy
   logic s_win, en_win;
   logic s_lose, en_lose;
 
+  // always @(*)
+  //   $display("chip_input: %b", chip_input);
+
   // chip input breakdown:
-  logic next = chip_input[5];
-  logic [4:0] input_char = chip_input[4:0];
+  logic next;
+  assign next = chip_input[5];
+
+  logic [4:0] input_char;
+  assign input_char = chip_input[4:0];
+
+  wire lose;
+  wire win;
+  wire [4:0] guessed_letters;
+
+  // always @(next)
+  //   $display("next: %b", next);
 
   // chip output breakdown:
   assign chip_output[6:0] = {lose, win, guessed_letters};
@@ -128,7 +140,7 @@ module controller(input logic clk, reset,
                   output logic en_word_index,
                   output logic en_input_char,
                   output logic s_win, en_win,
-                  output logic s_lose, en_lose,
+                  output logic s_lose, en_lose
                   );
 
   statetype       state, next_state;
@@ -183,11 +195,11 @@ module controller(input logic clk, reset,
                           else next_state = GUESS;
                         end
         CHECK_GUESS_0:  begin 
-                          if (input_char_eq_word[0]) next_state = CORRECT_0;
+                          if (input_char_eq_word[4]) next_state = CORRECT_0;
                           else next_state = CHECK_GUESS_1;
                         end
         CHECK_GUESS_1:  begin 
-                          if (input_char_eq_word[1]) next_state = CORRECT_1;
+                          if (input_char_eq_word[3]) next_state = CORRECT_1;
                           else next_state = CHECK_GUESS_2;
                         end
         CHECK_GUESS_2:  begin 
@@ -195,11 +207,11 @@ module controller(input logic clk, reset,
                           else next_state = CHECK_GUESS_3;
                         end
         CHECK_GUESS_3:  begin 
-			                    if (input_char_eq_word[3]) next_state = CORRECT_3;
+                          if (input_char_eq_word[1]) next_state = CORRECT_3;
                           else next_state = CHECK_GUESS_4;
                         end
         CHECK_GUESS_4:  begin 
-                          if (input_char_eq_word[4]) next_state = CORRECT_4;
+                          if (input_char_eq_word[0]) next_state = CORRECT_4;
                           else next_state = ALL_INCORRECT;
                         end
         CORRECT_0:      begin
@@ -259,7 +271,7 @@ endmodule
 
 module datapath #(parameter WIDTH = 8, REGBITS = 3)
                  (input  logic clk, rst,
-                 input   logic [15:0] chip_input,
+                 input   logic [5:0] chip_input,
 
                   input logic s_tries, en_tries,
                   input logic [2:0] s_guessed_letters, en_guessed_letters,
@@ -275,7 +287,7 @@ module datapath #(parameter WIDTH = 8, REGBITS = 3)
                  output reg tries_eq_7, 
 
                  output reg win, 
-                 output reg lose,
+                 output reg lose
                  );
 
   reg [2:0] tries;
@@ -304,25 +316,31 @@ module datapath #(parameter WIDTH = 8, REGBITS = 3)
     end 
 
   wire [5:0] random6;
-  reg [5:0] word_index = 0;
+  reg [5:0] word_index;
   always_comb
     if (en_word_index) word_index = random6;
   
 
   wire [24:0] word;
-  wordrom wordromy(
-    .addr(word_index),
-    .data(word)
-  );
+  // wordrom wordromy(
+  //   .addr(word_index),
+  //   .data(word)
+  // );
+
+
+  assign word=25'b0110101110100111000100101;
   
   lfsr6 lfsr(
     .clk(clk),
     .q(random6)
   );
 
-  reg [4:0] input_char = 0;
+  reg [4:0] input_char;
   always_comb
-    if (en_input_char) input_char = chip_input[4:0];
+    if (en_input_char) begin 
+      input_char = chip_input[4:0];
+      // $display("input_char: %b", input_char);
+    end
   
   always_comb 
     input_char_eq_word = {
@@ -330,8 +348,8 @@ module datapath #(parameter WIDTH = 8, REGBITS = 3)
       input_char == word[19:15],
       input_char == word[14:10],
       input_char == word[9:5],
-      input_char == word[4:0],
-    }
+      input_char == word[4:0]
+    };
   
 
   always_comb 
@@ -361,10 +379,10 @@ endmodule
 module wordrom (
   input [5:0] addr,
   output [24:0] data
-)
+);
 
   reg [24:0] words [0:63];
-  initial $readmemb("words.txt", words);
+  initial $readmemb("words_data.txt", words);
 
   assign data = words[addr];
 
