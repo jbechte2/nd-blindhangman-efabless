@@ -4,6 +4,8 @@ Author: Josue Guerra, Steven Conaway, Nicholas Palma, Jacob Bechtel, University 
 
 Email:  jguerra4@nd.edu, sconawa2@nd.edu, npalma2@nd.edu, jbechte2@nd.edu
 
-Push Date: 12/XX/2023
+CSE 30342 - Digital Integrated Circuits - University of Notre Dame
 
-Developed as a final project for the University of Notre Dame's Digital Integrated Circuits class. It plays a game of blind hangman using a finite state machine.
+Push Date: 12/11/2023
+
+Developed as a final project for the University of Notre Dame's Digital Integrated Circuits class. This project is a blind hangman game. The game has ROM with 64 five letter words, which the user can select using input pins. The user inputs up to seven letters, one at a time. If the letter guessed is correct, the output pin corresponding to the letter in the word will turn on.
