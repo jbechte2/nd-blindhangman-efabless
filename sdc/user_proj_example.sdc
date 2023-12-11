@@ -1,6 +1,6 @@
 ###############################################################################
 # Created by write_sdc
-# Tue Dec  5 03:11:40 2023
+# Mon Dec 11 18:38:32 2023
 ###############################################################################
 current_design user_proj_example
 ###############################################################################
@@ -16,15 +16,6 @@ set_input_delay 14.0000 -clock [get_clocks {clk}] -add_delay [get_ports {wb_rst_
 ###############################################################################
 # Environment
 ###############################################################################
-set_load -pin_load 0.1900 [get_ports {io_oeb[15]}]
-set_load -pin_load 0.1900 [get_ports {io_oeb[14]}]
-set_load -pin_load 0.1900 [get_ports {io_oeb[13]}]
-set_load -pin_load 0.1900 [get_ports {io_oeb[12]}]
-set_load -pin_load 0.1900 [get_ports {io_oeb[11]}]
-set_load -pin_load 0.1900 [get_ports {io_oeb[10]}]
-set_load -pin_load 0.1900 [get_ports {io_oeb[9]}]
-set_load -pin_load 0.1900 [get_ports {io_oeb[8]}]
-set_load -pin_load 0.1900 [get_ports {io_oeb[7]}]
 set_load -pin_load 0.1900 [get_ports {io_oeb[6]}]
 set_load -pin_load 0.1900 [get_ports {io_oeb[5]}]
 set_load -pin_load 0.1900 [get_ports {io_oeb[4]}]
@@ -32,15 +23,6 @@ set_load -pin_load 0.1900 [get_ports {io_oeb[3]}]
 set_load -pin_load 0.1900 [get_ports {io_oeb[2]}]
 set_load -pin_load 0.1900 [get_ports {io_oeb[1]}]
 set_load -pin_load 0.1900 [get_ports {io_oeb[0]}]
-set_load -pin_load 0.1900 [get_ports {io_out[15]}]
-set_load -pin_load 0.1900 [get_ports {io_out[14]}]
-set_load -pin_load 0.1900 [get_ports {io_out[13]}]
-set_load -pin_load 0.1900 [get_ports {io_out[12]}]
-set_load -pin_load 0.1900 [get_ports {io_out[11]}]
-set_load -pin_load 0.1900 [get_ports {io_out[10]}]
-set_load -pin_load 0.1900 [get_ports {io_out[9]}]
-set_load -pin_load 0.1900 [get_ports {io_out[8]}]
-set_load -pin_load 0.1900 [get_ports {io_out[7]}]
 set_load -pin_load 0.1900 [get_ports {io_out[6]}]
 set_load -pin_load 0.1900 [get_ports {io_out[5]}]
 set_load -pin_load 0.1900 [get_ports {io_out[4]}]
@@ -49,6 +31,14 @@ set_load -pin_load 0.1900 [get_ports {io_out[2]}]
 set_load -pin_load 0.1900 [get_ports {io_out[1]}]
 set_load -pin_load 0.1900 [get_ports {io_out[0]}]
 set_input_transition 0.6100 [get_ports {wb_clk_i}]
+set_input_transition -min 0.0500 [get_ports {io_in[11]}]
+set_input_transition -max 0.3800 [get_ports {io_in[11]}]
+set_input_transition -min 0.0500 [get_ports {io_in[10]}]
+set_input_transition -max 0.3800 [get_ports {io_in[10]}]
+set_input_transition -min 0.0500 [get_ports {io_in[9]}]
+set_input_transition -max 0.3800 [get_ports {io_in[9]}]
+set_input_transition -min 0.0500 [get_ports {io_in[8]}]
+set_input_transition -max 0.3800 [get_ports {io_in[8]}]
 set_input_transition -min 0.0500 [get_ports {io_in[7]}]
 set_input_transition -max 0.3800 [get_ports {io_in[7]}]
 set_input_transition -min 0.0500 [get_ports {io_in[6]}]
